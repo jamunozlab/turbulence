@@ -1,0 +1,31 @@
+
+/file/read-case SYS.1-1.cas 
+
+; AUTO-SAVE/BATCH OPTIONS
+
+; AUTO-SAVE/BATCH OPTIONS
+file/auto-save/case-frequency if-case-is-modified
+;
+/file/auto-save/data-frequency 3000
+;/file/auto-save/retain-most-recent-files yes
+;
+; STRING USED TO BUILD THE FILE NAME : "string"
+; THE AUTO-SAVE FILE will be: "string""iteration count".cas
+;
+file/autosave/root-name "Auto_"
+
+file/autosave/overwrite-existing-file no
+
+/file/confirm-overwrite no
+
+;/solve/initialize/initialize-flow
+
+/solve/iterate 1
+/solve/dual-time-iterate 30000 20
+
+; EXIT FLUENT
+
+exit 
+yes
+
+close-fluent

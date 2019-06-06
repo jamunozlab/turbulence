@@ -1,0 +1,9 @@
+#BSUB -J runf
+#BSUB -n 1
+#BSUB -W 400:00
+#BSUB -q medium_priority
+#BSUB -o output.txt
+#BSUB -e error.txt
+
+/home/cfd/ansys_inc/v180/fluent/bin/fluent 3d -lsf -g  -i trasient.jou
+
