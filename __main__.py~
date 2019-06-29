@@ -1,0 +1,4 @@
+import numpy as np
+
+data = np.load('/home/jamunoz/.keras/datasets/mnist.npz')
+print('yes')

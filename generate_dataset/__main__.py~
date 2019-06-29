@@ -1,0 +1,19 @@
+import numpy as np
+
+data = np.load('/home/jamunoz/.keras/datasets/mnist.npz')
+
+print(len(data))
+print(type(data))
+
+lst = data.files
+
+for item in lst:
+	print(item)
+	print(data[item])
+
+	print(len(data[item]))
+	print(type(data[item]))
+
+print(data['x_train'][0].shape)
+
+print('yes')
