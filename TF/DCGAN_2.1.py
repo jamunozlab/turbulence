@@ -1,4 +1,4 @@
-####################### DCGAN_2.py ####################################
+####################### DCGAN_2.1.py ####################################
 
 import tensorflow as tf
 tf.enable_eager_execution()
@@ -18,26 +18,26 @@ from tensorflow.keras.models import Sequential, Model
 ##################### Create Models #######################
 def generator_model():
     model = Sequential()
-    model.add(Dense(7*7*256, use_bias=False, input_shape=(100,)))
+    model.add(Dense(128*128*256, use_bias=False, input_shape=(100,)))
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
-    model.add(Reshape((7,7,256)))
+    model.add(Reshape((128,128,256)))
 
-    assert model.output_shape == (None,7,7,256) # note: none is batch size
+    assert model.output_shape == (None,128,128,256) # note: none is batch size
 	 
     model.add(Conv2DTranspose(128,(5,5),strides=(1,1), padding='same',use_bias=False))
-    assert model.output_shape == (None,7,7,128)
+    assert model.output_shape == (None,128,128,128)
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(Conv2DTranspose(64,(5,5),strides=(2,2),padding='same',use_bias=False))
-    assert model.output_shape == (None,14,14,64)
+    assert model.output_shape == (None,256,256,64)
     model.add(BatchNormalization())
     model.add(LeakyReLU())
 
     model.add(Conv2DTranspose(1,(5,5),strides=(2,2),padding='same',use_bias=False,activation='tanh')) # try Adam for activation or sigmoid for binary
-    assert model.output_shape == (None, 28,28,1)
+    assert model.output_shape == (None,512,512,1)
 
     model.summary()
 
@@ -47,6 +47,7 @@ def generator_model():
 
 def discriminator_model():
     model = Sequential()
+
     model.add(Conv2D(64,(5,5),strides=(2,2),padding='same'))
     model.add(LeakyReLU())
     model.add(Dropout(0.3))
@@ -101,11 +102,15 @@ checkpoint =tf.train.Checkpoint(genrator_optimizer = generator_optimizer, discri
 #in_images, train_labels), (_, _) = tf.keras.datasets.mnist.load_data()###############################################
 ################################################
 ### Load and Process Data ###
-(train_images,train_labels),(_,_) = tf.keras.datasets.mnist.load_data()
-train_images = train_images.reshape(train_images.shape[0],28,28,1).astype('float32')
-train_images = (train_images - 127.5) / 127.5 # normalize images to [-1,1]
-BUFFER_SIZE = 60000
-BATCH_SIZE = 256
+
+ufos = np.load('/home/jamunoz/shared/ufo.npz')
+train_images = ufos['x_train']
+#(train_images,train_labels),(_,_) = tf.keras.datasets.mnist.load_data()
+#train_images = train_images.reshape(train_images.shape[0],512,512,1).astype('float32')
+#train_images = (train_images - 127.5) / 127.5 # normalize images to [-1,1]
+
+BUFFER_SIZE = 200
+BATCH_SIZE = 200
 
 # create batches and shuffle dataset
 train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
@@ -114,7 +119,7 @@ train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_
 ################### Set up GANs for Training #############
 # define training parameters
 
-EPOCHS = 1 
+EPOCHS = 100 
 noise_dim = 100
 num_examples_to_generate = 16
 
