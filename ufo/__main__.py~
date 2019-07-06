@@ -1,0 +1,54 @@
+import sys
+import numpy as np
+
+from skimage import io
+from skimage.transform import resize, rotate
+from skimage.draw import polygon, ellipse
+
+from numpy.fft import ifftshift, ifft2, fftshift, fft2
+from numpy import exp, pi, mean, var, std, abs, sin, cos, sum
+
+import argparse
+
+sys.path.append('../')
+from turbulence.utils.ft import ft_sh_phase_screen
+from generators import generate_ellipse, generate_poly
+
+def main():
+    parser = argparse.ArgumentParser(description='Create UFO dataset.')
+    parser.add_argument('--ntrain', type=int, nargs=1, default=50, help='Number of samples to generate for the training dataset')
+    parser.add_argument('--npixels', type=int, nargs=1, default=256, help='Number of pixels per side for each image')
+    parser.add_argument('--filename', type=str, nargs=1, default='ufo.npz', help='Output filename (default is ufo.npz)')
+
+    args = parser.parse_args()
+    ntrain = int(args.ntrain[0]) 
+    ntest = int(ntrain*0.20) # TODO: Parse from command line
+    N = int(args.npixels)
+    nchan = 1 # RBG, grayscale, etc. Better than 4Chan
+
+    x_train = np.zeros([ntrain, N,N, nchan], dtype='float32') 
+    x_test = np.zeros([ntest, N, N, nchan], dtype='float32')
+    y_train = np.zeros([ntrain, N, N, nchan], dtype='float32')
+    y_test = np.zeros([ntest, N, N, nchan], dtype='float32')
+
+    for idx in range(ntrain):
+        Uin = generate_ellipse()
+        Uout = ft_sh_phase_screen(Uin, N=N, Lout=10, Lin=1e-3, deltax=0.005, wvl=0.532e-6, Dz=10e3, nscreen=20, kpow=22/6, Rytov=0.02, Np=5)
+    
+        x_train[idx,:,:,0] = Uin
+        y_train[idx,:,:,0] = abs(Uout)
+
+    for idx in range(ntrain):
+        Uin = generate_ellipse()
+        Uout = ft_sh_phase_screen(Uin, N=N, Lout=10, Lin=1e-3, deltax=0.005, wvl=0.532e-6, Dz=10e3, nscreen=20, kpow=22/6, Rytov=0.02, Np=5)
+							      
+        x_train[idx,:,:,0] = Uin
+        y_train[idx,:,:,0] = abs(Uout)
+
+    np.savez('ufo.npz', x_test=x_test, x_train=x_train, y_train=y_train, y_test=y_test)
+
+
+
+if __name__ == "__main__":
+    main()
+
