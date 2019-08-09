@@ -3,7 +3,7 @@ import numpy as np
 #import matplotlib.pyplot as plt
 
 #import pandas as pd
-import time, copy, os, h5py
+import time, copy, os, h5py, sys
 
 from numpy.fft import ifftshift, ifft2, fftshift, fft2
 from numpy import exp, pi, mean, var, std, abs, sin, cos, sum
@@ -99,9 +99,9 @@ def generate_tile_indices(N, tiles_per_side):
 def generate_individual(N, tiles_per_side):
     genetic_code = []
     for i in range(tiles_per_side**2):
-        genetic_code.append(abs(np.random.normal(loc=0.0, scale=1.0)*100))
+        #genetic_code.append(1)
+        genetic_code.append(abs(np.random.normal(loc=0.0, scale=1.0)))
 
-    #canvas = embody(N, tiles_per_side, genetic_code=genetic_code)
         
     return genetic_code
     
@@ -148,7 +148,7 @@ def pick_top_i(N, tiles_per_side, population, Ntop, Uout, minEntropy=False):
         #free_energy = lse + kl * T
         
         mean_value = np.mean(canvas)
-        upper_mean = np.mean(canvas[canvas > mean_value])
+        upper_mean = np.mean(canvas[canvas >= mean_value]) #='s should be fine
         lower_mean = np.mean(canvas[canvas <= mean_value])
         distance = upper_mean - lower_mean
         inv_dist = 0.5/distance
@@ -218,10 +218,18 @@ def mutate(population, mutation_rate=0.1, area_affected=1):
     for ind in population:
         genesIdx = list(np.random.randint(len(ind), size=(area_affected)))
         for gidx in genesIdx:
-            if 1 == np.random.randint(2):
-                ind[gidx] = ind[gidx] + ind[gidx] * mutation_rate
+            rnd = np.random.randint(3) #fraction of times that goes up/down should depend on stage
+            if 1 == rnd or 2 == rnd:
+                ind[gidx] = ind[gidx] + np.random.normal(loc=0.0, scale=1.0) * 100 * mutation_rate
             else:
-                ind[gidx] = ind[gidx] - ind[gidx] * mutation_rate
+                ind[gidx] = ind[gidx] - np.random.normal(loc=0.0, scale=1.0) * 100 * mutation_rate
+                ind[gidx] if 0 <= ind[gidx] else 0
+
+
+            #if 1 == np.random.randint(2):
+            #    ind[gidx] = ind[gidx] + ind[gidx] * mutation_rate
+            #else:
+            #    ind[gidx] = ind[gidx] - ind[gidx] * mutation_rate
                     
     return population
     
@@ -274,14 +282,14 @@ Nindividuals = 100
 tiles_per_side = 16
 elitism = 0.1
 Ntop = int(Nindividuals * elitism)
-Ngenerations = 200
+Ngenerations = 10
 population_orig = generate_orig_population(N, Nindividuals, tiles_per_side)
 
 topLsesList = []
 population16 = population_orig
 for generation in range(Ngenerations):
-    mutation_rate = 0.2 #(Ngenerations/(generation+1))-1
-    area_affected = int((tiles_per_side**2)/16)
+    mutation_rate = 0.3 #(Ngenerations/(generation+1))-1
+    area_affected = int((tiles_per_side**2)/16) * 2
     start = time.time()
     topInds, topLses = pick_top_i(N, tiles_per_side, population16, Ntop, Uout)
     population16 = generate_population_i(Nindividuals, topInds, topLses)
@@ -290,7 +298,9 @@ for generation in range(Ngenerations):
           np.median(topLses), np.log10(np.mean(topLses)))
     topLsesList.append(topLses)
     
-np.savez('t_population16.npz', population16)
+np.savez('u_population16.npz', population16)
+
+sys.exit()
 
 population32 = []
 for idx in range(len(population16)):

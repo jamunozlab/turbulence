@@ -35,31 +35,54 @@ def generate_tile_indices(N, tiles_per_side):
 
     return finalList
 
-#filename = '/home/jamunoz/git/turbulence/data/pristine_010079.hdf5'
-#f = h5py.File(filename, 'r')
-#Uin = f['PUMP']['Data'][0,:,:]
-#image=Uin
+filename = '/home/jamunoz/git/turbulence/data/pristine_010000.hdf5'
+f = h5py.File(filename, 'r')
+Uin = f['PUMP']['Data'][0,:,:]
+
+#phase screen parameter dictionary, hard-coded, WIP
+phz_params_dict = {}
+phz_params_dict['N'] = 256
+phz_params_dict['Lout'] = 10
+phz_params_dict['Lin'] = 10e-3
+phz_params_dict['deltax'] = 0.005
+phz_params_dict['wvl'] = 0.532e-6
+phz_params_dict['Dz'] = 10e3
+phz_params_dict['nscreen'] = 10
+phz_params_dict['kpow'] = 22/6
+phz_params_dict['Rytov'] = 0.02
+phz_params_dict['Np'] = 5
+
+Uout = ft_sh_phase_screen(Uin, phz_params_dict=phz_params_dict, genetic_code=None)
+
+Uin = abs(Uin)
+Uout = abs(Uout)
+
+image_00 = Uout
+image_01 = Uin
 
 #vmax = int(np.amax(Uin)) + 1
 #vmin = 0
 
 #population = np.load('/home/jamunoz/git/turbulence/s_population_serial.npz')
-population = np.load('/home/jamunoz/git/turbulence/t_population16.npz')
+population = np.load('/home/jamunoz/git/turbulence/u_population16.npz')
 genetic_code = population['arr_0'][0]
-image_ul = embody(256, 16, genetic_code=genetic_code)
+image_11 = embody(256, 16, genetic_code=genetic_code)
+image_10 = abs(ft_sh_phase_screen(image_11, phz_params_dict=phz_params_dict, genetic_code=None))
 
 population = np.load('/home/jamunoz/git/turbulence/t_population32.npz')
 genetic_code = population['arr_0'][0]
-image_ur = embody(256, 32, genetic_code=genetic_code)
+image_21 = embody(256, 32, genetic_code=genetic_code)
+image_20 = abs(ft_sh_phase_screen(image_21, phz_params_dict=phz_params_dict, genetic_code=None))
 
 population = np.load('/home/jamunoz/git/turbulence/t_population64.npz')
 genetic_code = population['arr_0'][0]
-image_ll = embody(256, 64, genetic_code=genetic_code)
+image_31 = embody(256, 64, genetic_code=genetic_code)
+image_30 = abs(ft_sh_phase_screen(image_31, phz_params_dict=phz_params_dict, genetic_code=None))
 
 #population = np.load('/home/jamunoz/git/turbulence/t_population128.npz')
 #genetic_code = population['arr_0'][0]
 #image_lr = embody(256, 32, genetic_code=genetic_code)
-image_lr = image_ll
+#image_lr = image_ll
 
 #print(population['arr_0'][39])
 #print(dir(population.f))
@@ -70,7 +93,8 @@ image_lr = image_ll
 vmin = 0
 vmax = 400 #np.max(np.array(genetic_code))+10
 
-cmap = 'binary'
+#cmap = 'binary'
+cmap = 'gray'
 panel_title_dict = {
     'ul': 'Pristine',
     'ur': 'Simulated turbulence',
@@ -95,26 +119,39 @@ panel_title_dict = {
 #corrected = population['arr_0'][50]
 #corrected = image_wrapped - T 
 
-fig, ax = plt.subplots(2, 2, sharex=True, sharey=True)
-ax1, ax2, ax3, ax4 = ax.ravel()
 
-fig.colorbar(ax1.imshow(image_ul, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax1)
+fig, ax = plt.subplots(4, 2, sharex=True, sharey=True, figsize=(10, 20))
+ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = ax.ravel()
+
+fig.colorbar(ax1.imshow(image_00, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax1)
 ax1.set_title(panel_title_dict['ul'])
 
-fig.colorbar(ax2.imshow(image_ur, cmap=cmap, vmin=vmin, vmax=vmax),ax=ax2)
+fig.colorbar(ax2.imshow(image_01, cmap=cmap, vmin=vmin, vmax=vmax),ax=ax2)
 ax2.set_title(panel_title_dict['ur'])
 
-fig.colorbar(ax3.imshow(image_ll, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax3)
+fig.colorbar(ax3.imshow(image_10, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax3)
 ax3.set_title(panel_title_dict['ll'])
 
-fig.colorbar(ax4.imshow(image_lr, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax4)
+fig.colorbar(ax4.imshow(image_11, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax4)
 ax4.set_title(panel_title_dict['lr'])
 ax4.set_xticks([])
 ax4.set_yticks([])
 
+fig.colorbar(ax5.imshow(image_20, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax5)
+ax5.set_title(panel_title_dict['lr'])
+
+fig.colorbar(ax6.imshow(image_21, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax6)
+ax6.set_title(panel_title_dict['lr'])
+
+fig.colorbar(ax7.imshow(image_30, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax7)
+ax7.set_title(panel_title_dict['lr'])
+
+fig.colorbar(ax8.imshow(image_31, cmap=cmap, vmin=vmin, vmax=vmax), ax=ax8)
+ax8.set_title(panel_title_dict['lr'])
+
 population.close()
 
-filename='_s.png'
+filename='_u.png'
 plt.savefig(filename)
 
 
